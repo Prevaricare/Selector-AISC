@@ -66,4 +66,4 @@ ct3.metric("λf (bf/2tf)", d['BF_2TF'])
 ct4.metric("λw (h/tw)", d['H_TW'])
 
 st.divider()
-st.caption(f"Peso Nominal (W): {d['W']} lb/ft | Fuente: AISC v13")1
+st.caption(f"Peso Nominal (W): {d['W']} lb/ft | Fuente: AISC v13")
