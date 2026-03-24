@@ -6,7 +6,6 @@ st.set_page_config(page_title="Buscador AISC", layout="wide")
 
 CSV_FILE = "AISC Shapes Database v13 (Estructurada) (1).csv"
 
-# Orden y nombres de salida
 PROPERTY_MAP = [
     ("W", ["W"]), ("A", ["A"]), ("Wno", ["WNO"]), ("Ix", ["IX"]),
     ("Iy", ["IY"]), ("J", ["J"]), ("Sw", ["SW"]),
@@ -50,16 +49,14 @@ def build_matrix_table(row: pd.Series, group_size=11) -> pd.DataFrame:
         props.append(label)
         values.append(first_existing_value(row, candidates))
 
-    # Dividir en grupos
     rows = []
     for i in range(0, len(props), group_size):
         prop_slice = props[i:i+group_size]
         val_slice = values[i:i+group_size]
 
-        rows.append(prop_slice)  # fila de propiedades
-        rows.append(val_slice)   # fila de valores
+        rows.append(prop_slice)
+        rows.append(val_slice)
 
-    # Rellenar para que todas las filas tengan mismo tamaño
     max_len = max(len(r) for r in rows)
     rows = [r + [""]*(max_len - len(r)) for r in rows]
 
@@ -75,11 +72,10 @@ if not csv_path.exists():
 
 df = load_data(str(csv_path))
 
-# 🔹 Layout en columnas
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.subheader("🔍 Búsqueda")
+    st.subheader("Búsqueda")
     st.caption("Ej: W10X49, W14X34, C10X30, L3X3X3/16")
     query = st.text_input("AISC_MANUAL_LABEL")
 
