@@ -41,7 +41,7 @@ def first_existing_value(row: pd.Series, candidates: list[str]):
                 return val
     return pd.NA
 
-# 🔹 TABLA MATRIZ (derecha)
+# TABLA MATRIZ (derecha)
 def build_matrix_table(row: pd.Series, group_size=11) -> pd.DataFrame:
     props = []
     values = []
@@ -60,7 +60,7 @@ def build_matrix_table(row: pd.Series, group_size=11) -> pd.DataFrame:
 
     return pd.DataFrame(rows)
 
-# 🔹 TEXTO PLANO (izquierda)
+# TEXTO PLANO (izquierda)
 def build_text_output(row: pd.Series) -> str:
     lines = []
     for label, candidates in PROPERTY_MAP:
@@ -83,12 +83,44 @@ df = load_data(str(csv_path))
 
 col1, col2 = st.columns([1, 2])
 
-# 🔹 IZQUIERDA
+# IZQUIERDA
 with col1:
-    st.subheader("Búsqueda")
-    query = st.text_input("AISC_MANUAL_LABEL")
+    st.subheader("🔍 Búsqueda")
+    all_labels = (
+        df["AISC_MANUAL_LABEL"]
+        .dropna()
+        .astype(str)
+        .str.upper()
+        .str.replace("×", "X", regex=False)
+        .str.replace(" ", "", regex=False)
+        .unique()
+        .tolist()
+    )
 
-# 🔹 DERECHA
+    search = st.text_input(
+        "AISC_MANUAL_LABEL",
+        placeholder="Escribe W10, W14, C10, L3X3X3/16..."
+    )
+
+    if search.strip():
+        q = normalize_label(search)
+        suggestions = [x for x in all_labels if q in normalize_label(x)]
+    else:
+        suggestions = all_labels
+
+    selected = st.selectbox(
+        "Sugerencias",
+        suggestions,
+        index=None,
+        placeholder="Selecciona una sección"
+    )
+
+    if selected:
+        query = selected
+    else:
+        query = search
+
+# DERECHA
 with col2:
     st.subheader("Tabla de propiedades")
 
