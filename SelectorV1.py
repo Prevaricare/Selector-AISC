@@ -41,27 +41,19 @@ def first_existing_value(row: pd.Series, candidates: list[str]):
                 return val
     return pd.NA
 
-def build_matrix_table(row: pd.Series, group_size=11) -> pd.DataFrame:
-    props = []
-    values = []
+def build_text_output(row: pd.Series) -> str:
+    lines = []
     
     for label, candidates in PROPERTY_MAP:
-        props.append(label)
-        values.append(first_existing_value(row, candidates))
-
-    rows = []
-    for i in range(0, len(props), group_size):
-        prop_slice = props[i:i+group_size]
-        val_slice = values[i:i+group_size]
-
-        rows.append(prop_slice)
-        rows.append(val_slice)
-
-    max_len = max(len(r) for r in rows)
-    rows = [r + [""]*(max_len - len(r)) for r in rows]
-
-    df_out = pd.DataFrame(rows)
-    return df_out
+        val = first_existing_value(row, candidates)
+        
+        # Manejo de NaN → None
+        if pd.isna(val):
+            val = None
+        
+        lines.append(f"{label} : {val}")
+    
+    return "\n".join(lines)
 
 st.title("Buscador de secciones AISC")
 
@@ -95,10 +87,8 @@ with col2:
             st.markdown(f"### {row['AISC_MANUAL_LABEL']}")
             st.write(f"Tipo: {row.get('TYPE', '')}")
 
-            result_table = build_matrix_table(row)
-
-            # 🔹 Mostrar tipo "tabla de la imagen"
-            st.dataframe(result_table, use_container_width=True)
+            text_output = build_text_output(row)
+            st.code(text_output, language="text")
 
     else:
         st.info("Escribe una sección para ver resultados.")
