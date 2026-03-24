@@ -99,7 +99,7 @@ with col2:
             st.markdown(f"### {row['AISC_MANUAL_LABEL']}")
             st.write(f"Tipo: {row.get('TYPE', '')}")
 
-            result_table = build_horizontal_table(row)
+            result_table = build_matrix_table(row)
 
             # 🔹 Mostrar tipo "tabla de la imagen"
             st.dataframe(result_table, use_container_width=True)
