@@ -96,7 +96,12 @@ with col1:
         .unique()
         .tolist()
     )
-    
+
+    search = st.text_input(
+        "AISC_MANUAL_LABEL",
+        placeholder="Escribe W10, W14, C10, L3X3X3/16..."
+    )
+
     if search.strip():
         q = normalize_label(search)
         suggestions = [x for x in all_labels if q in normalize_label(x)]
@@ -104,10 +109,10 @@ with col1:
         suggestions = all_labels
 
     selected = st.selectbox(
-        "Selecciona una sección",
+        "Sugerencias",
         suggestions,
         index=None,
-        placeholder="Escribe W10, W14, C10, L3X3X3/16..."
+        placeholder="Selecciona una sección"
     )
 
     if selected:
