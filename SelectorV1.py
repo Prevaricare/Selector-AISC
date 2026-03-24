@@ -1,69 +1,115 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
+from pathlib import Path
 
-st.set_page_config(page_title="Steel Design Tool - UNAM", layout="wide")
+st.set_page_config(page_title="Buscador AISC", layout="wide")
+
+CSV_FILE = "AISC Shapes Database v13 (Estructurada) (1).csv"
+
+# Orden y nombres de salida como los quieres ver
+PROPERTY_MAP = [
+    ("W", ["W"]),
+    ("A", ["A"]),
+    ("Wno", ["WNO"]),
+    ("Ix", ["IX"]),
+    ("Iy", ["IY"]),
+    ("J", ["J"]),
+    ("Sw", ["SW"]),
+    ("Zx", ["ZX"]),
+    ("Sx", ["SX"]),
+    ("Zy", ["ZY"]),
+    ("Sy", ["SY"]),
+    ("C", ["C"]),
+    ("Qf", ["QF"]),
+    ("Qw", ["QW"]),
+    ("Ca", ["CA", "AW"]),  # en esta base no viene CA; intenta CA y luego AW
+    ("d", ["D"]),
+    ("ht", ["HT"]),
+    ("iam_ex", ["OD"]),
+    ("bf", ["BF"]),
+    ("b", ["B"]),
+    ("iam_in", ["ID"]),
+    ("tw", ["TW"]),
+    ("tf", ["TF"]),
+    ("t", ["T"]),
+    ("t_nom", ["TNOM"]),
+    ("t_des", ["TDES"]),
+    ("k_des", ["KDES"]),
+    ("k_det", ["KDET"]),
+    ("k1", ["K1"]),
+    ("x_m", ["X"]),
+    ("y_m", ["Y"]),
+    ("e_0", ["E0"]),
+    ("x_p", ["XP"]),
+    ("y_p", ["YP"]),
+    ("r_x", ["RX"]),
+    ("r_y", ["RY"]),
+    ("r_z", ["RZ"]),
+    ("r_0", ["RO"]),
+    ("bf/2tf", ["BF_2TF"]),
+    ("b/t", ["B_T"]),
+    ("h/tw", ["H_TW"]),
+    ("h/t", ["H_T"]),
+    ("d/t", ["D_T"]),
+]
 
 @st.cache_data
-def load_data():
-    # Cargamos el CSV saltando la fila de índices
-    df = pd.read_csv("AISC Shapes Database v13 (Estructurada) (1).csv", skiprows=[0])
+def load_data(csv_path: str) -> pd.DataFrame:
+    # El archivo tiene una fila extra antes de los encabezados reales
+    df = pd.read_csv(csv_path, header=1)
     df.columns = df.columns.str.strip()
     return df
 
-df = load_data()
+def normalize_label(value: str) -> str:
+    # Normaliza para aceptar W10x49, W10X49, w10x49, etc.
+    return str(value).strip().upper().replace("×", "X").replace(" ", "")
 
-# --- Interfaz de Usuario ---
-st.title("🏗️ Consultor de Perfiles Estructurales")
-st.sidebar.header("Selección de Perfil")
+def first_existing_value(row: pd.Series, candidates: list[str]):
+    for col in candidates:
+        if col in row.index:
+            val = row[col]
+            if pd.notna(val):
+                return val
+    return pd.NA
 
-perfil_sel = st.sidebar.selectbox(
-    "Nombre del Perfil (AISC_MANUAL_LABEL):", 
-    df['AISC_MANUAL_LABEL'].unique(),
-    index=list(df['AISC_MANUAL_LABEL']).index('W10X49') if 'W10X49' in list(df['AISC_MANUAL_LABEL']) else 0
-)
+def build_output_table(row: pd.Series) -> pd.DataFrame:
+    data = []
+    for label, candidates in PROPERTY_MAP:
+        data.append((label, first_existing_value(row, candidates)))
+    out = pd.DataFrame(data, columns=["Prop.", "Valor"]).set_index("Prop.")
+    return out
 
-# Filtramos los datos del perfil seleccionado
-d = df[df['AISC_MANUAL_LABEL'] == perfil_sel].iloc[0]
+st.title("Buscador de secciones AISC")
 
-# --- Layout Principal (Siguiendo tu imagen) ---
-st.header(f"Resultados para: {perfil_sel}")
+csv_path = Path(CSV_FILE)
+if not csv_path.exists():
+    st.error(f"No se encontró el archivo CSV: {CSV_FILE}")
+    st.stop()
 
-# Fila 1: Geometría y Peso
-st.subheader("📏 Geometría y Áreas")
-c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Peralte (d)", f"{d['D']}\"")
-c2.metric("Ancho Patín (bf)", f"{d['BF']}\"")
-c3.metric("Espesor Alma (tw)", f"{d['TW']}\"")
-c4.metric("Espesor Patín (tf)", f"{d['TF']}\"")
-c5.metric("Área (A)", f"{d['A']} in²")
+df = load_data(str(csv_path))
 
-# Fila 2: Eje X y Eje Y
-st.subheader("⚙️ Propiedades Mecánicas")
-col_x, col_y = st.columns(2)
+st.caption("Busca por AISC_MANUAL_LABEL, por ejemplo: W10X49, W14X34, C10X30, L3X3X3/16")
 
-with col_x:
-    st.info("**Eje Fuerte (X-X)**")
-    cx1, cx2 = st.columns(2)
-    cx1.write(f"**Ix:** {d['IX']} in⁴")
-    cx1.write(f"**Sx:** {d['SX']} in³")
-    cx2.write(f"**Rx:** {d['RX']} in")
-    cx2.write(f"**Zx:** {d['ZX']} in³")
+query = st.text_input("AISC_MANUAL_LABEL")
 
-with col_y:
-    st.info("**Eje Débil (Y-Y)**")
-    cy1, cy2 = st.columns(2)
-    cy1.write(f"**Iy:** {d['IY']} in⁴")
-    cy1.write(f"**Sy:** {d['SY']} in³")
-    cy2.write(f"**Ry:** {d['RY']} in")
-    cy2.write(f"**Zy:** {d['ZY']} in³")
+if query:
+    q = normalize_label(query)
+    mask = df["AISC_MANUAL_LABEL"].astype(str).map(normalize_label) == q
+    matches = df.loc[mask]
 
-# Fila 3: Torsión y Relaciones de Esbeltez
-st.subheader("🔄 Torsión y Relaciones Ancho-Espesor")
-ct1, ct2, ct3, ct4 = st.columns(4)
-ct1.metric("J (Torsión)", f"{d['J']} in⁴")
-ct2.metric("Cw (Alabeo)", f"{d['CW']} in⁶")
-ct3.metric("λf (bf/2tf)", d['BF_2TF'])
-ct4.metric("λw (h/tw)", d['H_TW'])
+    if matches.empty:
+        st.warning("No se encontró esa sección.")
+        st.stop()
 
-st.divider()
-st.caption(f"Peso Nominal (W): {d['W']} lb/ft | Fuente: AISC v13")
+    row = matches.iloc[0]
+
+    st.subheader(f"Resultado: {row['AISC_MANUAL_LABEL']}")
+    st.write(f"Tipo: {row.get('TYPE', '')}")
+
+    result_table = build_output_table(row)
+    st.dataframe(result_table, use_container_width=True)
+
+    with st.expander("Ver fila completa del CSV"):
+        st.dataframe(matches, use_container_width=True)
+else:
+    st.info("Escribe una sección para ver sus propiedades.")
