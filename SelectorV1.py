@@ -85,12 +85,12 @@ col1, col2 = st.columns([1, 2])
 
 # 🔹 IZQUIERDA
 with col1:
-    st.subheader("🔍 Búsqueda")
+    st.subheader("Búsqueda")
     query = st.text_input("AISC_MANUAL_LABEL")
 
 # 🔹 DERECHA
 with col2:
-    st.subheader("📊 Tabla de propiedades")
+    st.subheader("Tabla de propiedades")
 
 if query:
     q = normalize_label(query)
@@ -110,13 +110,6 @@ if query:
             text_output = build_text_output(row)
             st.code(text_output, language="text")
 
-            st.download_button(
-                "📥 Descargar TXT",
-                data=text_output,
-                file_name=f"{row['AISC_MANUAL_LABEL']}.txt",
-                mime="text/plain"
-            )
-
         # DERECHA → MATRIZ
         with col2:
             matrix_table = build_matrix_table(row)
@@ -128,10 +121,9 @@ if query:
                 }),
                 use_container_width=True
             )
-
-# 🔹 CSV abajo
+# CSV abajo
 st.markdown("---")
-st.subheader("📁 Base de datos completa")
+st.subheader("Base de datos completa")
 
 with st.expander("Ver CSV completo"):
     st.dataframe(df, use_container_width=True)
