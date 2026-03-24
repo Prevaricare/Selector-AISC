@@ -105,11 +105,6 @@ with col1:
         placeholder="Empieza a escribir (ej: W10, C12, L3...)"
     )
 
-    if selected:
-        query = selected
-    else:
-        query = search
-
 # DERECHA
 with col2:
     st.subheader("Tabla de propiedades")
