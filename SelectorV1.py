@@ -85,7 +85,7 @@ col1, col2 = st.columns([1, 2])
 
 # IZQUIERDA
 with col1:
-    st.subheader("🔍 Búsqueda")
+    st.subheader("Búsqueda")
     all_labels = (
         df["AISC_MANUAL_LABEL"]
         .dropna()
@@ -109,10 +109,10 @@ with col1:
         suggestions = all_labels
 
     selected = st.selectbox(
-        "Sugerencias",
+        "SSelecciona una sección",
         suggestions,
         index=None,
-        placeholder="Selecciona una sección"
+        placeholder="Escribe W10, W14, C10, L3X3X3/16..."
     )
 
     if selected:
