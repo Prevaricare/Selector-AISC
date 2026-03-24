@@ -42,14 +42,28 @@ def first_existing_value(row: pd.Series, candidates: list[str]):
                 return val
     return pd.NA
 
-def build_horizontal_table(row: pd.Series) -> pd.DataFrame:
+def build_matrix_table(row: pd.Series, group_size=11) -> pd.DataFrame:
     props = []
     values = []
+    
     for label, candidates in PROPERTY_MAP:
         props.append(label)
         values.append(first_existing_value(row, candidates))
-    
-    df_out = pd.DataFrame([values], columns=props)
+
+    # Dividir en grupos
+    rows = []
+    for i in range(0, len(props), group_size):
+        prop_slice = props[i:i+group_size]
+        val_slice = values[i:i+group_size]
+
+        rows.append(prop_slice)  # fila de propiedades
+        rows.append(val_slice)   # fila de valores
+
+    # Rellenar para que todas las filas tengan mismo tamaño
+    max_len = max(len(r) for r in rows)
+    rows = [r + [""]*(max_len - len(r)) for r in rows]
+
+    df_out = pd.DataFrame(rows)
     return df_out
 
 st.title("Buscador de secciones AISC")
